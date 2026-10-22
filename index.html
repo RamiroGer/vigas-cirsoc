@@ -1,0 +1,602 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Verificación de vigas · CIRSOC 201-2025</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0F3; --surface:#FFFFFF; --ink:#1A2230; --muted:#5C6676; --rule:#D3D9E1; --field:#F7F8FA;
+  --accent:#1F3A5F; --accent-ink:#FFFFFF; --ok:#1D6B57; --okbg:#E3F2EC; --bad:#B42318; --badbg:#FBE7E5;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F141C; --surface:#161D27; --ink:#E6EAF0; --muted:#9AA5B5; --rule:#2A3443; --field:#1C2531;
+    --accent:#8FB3E0; --accent-ink:#0F141C; --ok:#6FCBA9; --okbg:#15302A; --bad:#FF8A80; --badbg:#3A1A18;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F141C; --surface:#161D27; --ink:#E6EAF0; --muted:#9AA5B5; --rule:#2A3443; --field:#1C2531;
+  --accent:#8FB3E0; --accent-ink:#0F141C; --ok:#6FCBA9; --okbg:#15302A; --bad:#FF8A80; --badbg:#3A1A18;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:400 15px/1.55 var(--sans);
+  padding:0 0 env(safe-area-inset-bottom,0px)}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 40px}
+header{margin-bottom:22px}
+h1{font-size:22px;font-weight:600;margin:0 0 4px;letter-spacing:-.01em}
+header p{margin:0;color:var(--muted);max-width:70ch}
+h2{font-size:15px;font-weight:600;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:minmax(290px,370px) 1fr;gap:20px;align-items:start}
+@media (max-width:880px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:20px}
+.group{padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--rule)}
+.group:last-of-type{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.row{display:grid;grid-template-columns:1fr 104px;gap:10px;align-items:center;margin-bottom:8px}
+.row label{color:var(--ink);font-size:14px}
+.row small{display:block;color:var(--muted);font-size:12px}
+input[type=number],input[type=text]{font:400 14px var(--mono);color:var(--ink);background:var(--field);
+  border:1px solid var(--rule);border-radius:3px;padding:6px 8px;width:100%;min-height:34px}
+input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.btn{font:500 14px var(--sans);border-radius:3px;padding:9px 14px;cursor:pointer;border:1px solid var(--accent);
+  background:var(--accent);color:var(--accent-ink);min-height:38px}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn.small{font-size:13px;padding:4px 9px;min-height:28px}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.verdicts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px}
+@media (max-width:560px){.verdicts{grid-template-columns:1fr}}
+.verdict{border:1px solid var(--rule);border-radius:3px;padding:12px 14px;background:var(--field)}
+.verdict span{display:block;font-size:12px;color:var(--muted)}
+.verdict strong{font-size:16px;font-weight:600}
+.verdict.ok{background:var(--okbg);border-color:transparent}
+.verdict.ok strong{color:var(--ok)}
+.verdict.bad{background:var(--badbg);border-color:transparent}
+.verdict.bad strong{color:var(--bad)}
+.sec{margin-top:22px}
+.step{padding:12px 0;border-top:1px solid var(--rule)}
+.step:first-of-type{border-top:0}
+.step-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
+.step-head h3{font-size:14px;font-weight:600;margin:0}
+.art{font:400 12px var(--mono);color:var(--muted)}
+.eq{font:400 13px/1.6 var(--mono);color:var(--muted);margin:4px 0 2px;white-space:pre-wrap;overflow-x:auto}
+.sub{font:400 13px/1.6 var(--mono);margin:0;overflow-x:auto;white-space:nowrap}
+.res{font:500 14px var(--mono);margin:4px 0 0;overflow-x:auto;white-space:nowrap}
+.note{font-size:12px;color:var(--muted);margin:4px 0 0}
+.pill{font-size:12px;font-weight:500;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.pill.ok{background:var(--okbg);color:var(--ok)}
+.pill.bad{background:var(--badbg);color:var(--bad)}
+.msg{color:var(--bad);font-weight:500}
+.tablewrap{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:760px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);white-space:nowrap}
+th{font-weight:500;color:var(--muted);font-size:12px}
+td.num{font-family:var(--mono);text-align:right}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.toolbar input{width:140px}
+.foot{margin-top:28px;color:var(--muted);font-size:13px;max-width:90ch}
+.foot p{margin:0 0 8px}
+.vizgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media (max-width:760px){.vizgrid{grid-template-columns:1fr}}
+.fig{margin:0}
+.fig figcaption{font-size:13px;color:var(--muted);margin-bottom:6px}
+.fig svg{width:100%;height:auto;max-height:340px;display:block}
+.util{display:grid;gap:16px}
+.ub-head{display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px;gap:10px;flex-wrap:wrap}
+.ub-track{height:14px;background:var(--field);border:1px solid var(--rule);border-radius:3px;overflow:hidden}
+.ub-fill{height:100%}
+.ub-fill.ok{background:var(--ok)}
+.ub-fill.bad{background:var(--bad)}
+.ub-note{font:400 12px var(--mono);color:var(--muted);margin:4px 0 0}
+.check{display:flex;gap:8px;align-items:center;font-size:14px;margin:4px 0 10px}
+.check input{width:16px;height:16px;margin:0}
+input[readonly]{opacity:.65}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Verificación de vigas rectangulares</h1>
+    <p>Flexión y corte según CIRSOC 201-2025 (capítulos 9, 21, 22 y 25). Ingresá los datos y la memoria de cálculo se actualiza sola. Las solicitaciones Mu y Vu son mayoradas.</p>
+  </header>
+
+  <div class="grid">
+    <section class="panel" aria-label="Datos de entrada">
+      <div class="group">
+        <h2>Geometría</h2>
+        <div class="row"><label for="nombre">Elemento<small>identificación</small></label><input type="text" id="nombre" value="V1"></div>
+        <div class="row"><label for="b">Ancho bw (mm)</label><input type="number" id="b" step="any" value="300"></div>
+        <div class="row"><label for="h">Altura h (mm)</label><input type="number" id="h" step="any" value="500"></div>
+        <div class="row"><label for="r">Recubrimiento r (mm)<small>hasta la cara del estribo</small></label><input type="number" id="r" step="any" value="30"></div>
+      </div>
+      <div class="group">
+        <h2>Materiales</h2>
+        <div class="row"><label for="fc">f’c (MPa)</label><input type="number" id="fc" step="any" value="25"></div>
+        <div class="row"><label for="fy">fy longitudinal (MPa)</label><input type="number" id="fy" step="any" value="420"></div>
+        <div class="row"><label for="fyt">fyt estribos (MPa)</label><input type="number" id="fyt" step="any" value="420"></div>
+        <div class="row"><label for="lam">λ hormigón<small>1,00 para hormigón de densidad normal</small></label><input type="number" id="lam" step="any" value="1"></div>
+      </div>
+      <div class="group">
+        <h2>Solicitaciones mayoradas</h2>
+        <div class="row"><label for="Mu">Mu (kN·m)</label><input type="number" id="Mu" step="any" value="90"></div>
+        <div class="row"><label for="Vu">Vu (kN)</label><input type="number" id="Vu" step="any" value="120"></div>
+        <label class="check"><input type="checkbox" id="desdeCargas"> Calcular Mu y Vu desde las cargas</label>
+        <div id="cargas" hidden>
+          <div class="row"><label for="qD">Carga muerta qD (kN/m)<small>sin peso propio</small></label><input type="number" id="qD" step="any" value="10"></div>
+          <div class="row"><label for="qL">Sobrecarga qL (kN/m)</label><input type="number" id="qL" step="any" value="8"></div>
+          <div class="row"><label for="L">Luz libre L (m)</label><input type="number" id="L" step="any" value="5"></div>
+          <div class="row"><label for="gam">Peso del hormigón γ (kN/m³)<small>valor usual 25</small></label><input type="number" id="gam" step="any" value="25"></div>
+          <label class="check"><input type="checkbox" id="usarD"> Vu a d de la cara del apoyo, si se cumple 9.4.3.2</label>
+          <p class="note" id="wuNota"></p>
+        </div>
+      </div>
+      <div class="group">
+        <h2>Armadura</h2>
+        <div class="row"><label for="n">Barras longitudinales en tracción n</label><input type="number" id="n" step="1" min="1" value="3"></div>
+        <div class="row"><label for="db">Diámetro barra db (mm)</label><input type="number" id="db" step="any" value="16"></div>
+        <div class="row"><label for="dst">Diámetro estribo dst (mm)</label><input type="number" id="dst" step="any" value="8"></div>
+        <div class="row"><label for="ramas">Ramas del estribo</label><input type="number" id="ramas" step="1" min="1" value="2"></div>
+        <div class="row"><label for="s">Separación de estribos s (mm)</label><input type="number" id="s" step="any" value="150"></div>
+        <div class="row"><label for="dagg">Tamaño máx. del agregado (mm)</label><input type="number" id="dagg" step="any" value="20"></div>
+      </div>
+      <div class="group" style="border-bottom:0">
+        <button class="btn" id="agregar" type="button">Agregar a la planilla</button>
+      </div>
+    </section>
+
+    <section aria-label="Resultados">
+      <div class="panel">
+        <div class="verdicts" id="veredictos" aria-live="polite"></div>
+        <div id="memoria"></div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel sec" aria-label="Visualización">
+    <h2>Visualización</h2>
+    <div class="vizgrid">
+      <figure class="fig">
+        <figcaption>Sección transversal</figcaption>
+        <div id="seccion"></div>
+        <p class="note" id="seccionNota"></p>
+      </figure>
+      <figure class="fig">
+        <figcaption>Deformaciones y bloque de tensiones</figcaption>
+        <div id="deformaciones"></div>
+        <p class="note" id="deformacionesNota"></p>
+      </figure>
+    </div>
+    <figure class="fig" id="figDiag" hidden>
+      <figcaption>Diagramas de momento y corte, viga simplemente apoyada</figcaption>
+      <div id="diagramas"></div>
+      <p class="note" id="diagNota"></p>
+    </figure>
+    <h2 style="margin-top:24px">Utilización</h2>
+    <div class="util" id="utilizacion"></div>
+  </section>
+
+  <section class="panel sec" aria-label="Planilla de elementos">
+    <div class="toolbar">
+      <h2 style="margin:0 16px 0 0">Planilla de vigas</h2>
+      <button class="btn ghost small" id="vaciar" type="button">Vaciar planilla</button>
+      <span class="note" id="contador"></span>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Elemento</th><th>bw×h (mm)</th><th>d (mm)</th><th>As (mm²)</th>
+            <th>φMn (kN·m)</th><th>Mu (kN·m)</th><th>φVn (kN)</th><th>Vu (kN)</th><th>Estado</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="filas"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="foot">
+    <p>Herramienta de apoyo para el cálculo. No reemplaza la verificación del profesional responsable ni el análisis de cargas.</p>
+    <p>Limitaciones: vigas rectangulares de una sola capa de armadura en tracción; Vc con la expresión simplificada 0,17·λ·√f’c·bw·d; no evalúa torsión, flechas, fisuración ni anclajes. Con cargas, la viga se toma simplemente apoyada y solo se consideran D y L, con las combinaciones 1,4D y 1,2D + 1,6L del artículo 5.3.1. No se incluyen Lr, S, R, W ni E.</p>
+  </div>
+</div>
+
+<script>
+const FIELDS = ['b','h','r','dst','db','n','fc','fy','fyt','Mu','Vu','s','ramas','lam','dagg'];
+const KEY = 'cirsoc-vigas-planilla-v1';
+const PI = Math.PI, sq = Math.sqrt;
+const $ = id => document.getElementById(id);
+
+const f = (x, d = 1) => Number.isFinite(x)
+  ? x.toLocaleString('es-AR', { minimumFractionDigits: d, maximumFractionDigits: d }) : '—';
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function leer() {
+  const v = {};
+  for (const k of FIELDS) v[k] = parseFloat($(k).value);
+  v.nombre = $('nombre').value.trim() || 'Sin nombre';
+  return v;
+}
+
+function valido(v) {
+  return FIELDS.every(k => Number.isFinite(v[k])) &&
+    ['b','h','r','dst','db','fc','fy','fyt','Mu','Vu','s','lam','ramas','n'].every(k => v[k] > 0) &&
+    Number.isInteger(v.n) && Number.isInteger(v.ramas) && v.dagg >= 0 && v.r + v.dst + v.db / 2 < v.h;
+}
+
+function calcular(v) {
+  const { b, h, r, dst, db, n, fc, fy, fyt, Mu, Vu, s, ramas, lam, dagg } = v;
+  const fyE = Math.min(fy, 500);
+
+  // Altura útil y flexión
+  const d = h - r - dst - db / 2;
+  const As = n * PI * db * db / 4;
+  const m1 = 0.25 * sq(fc) / fyE * b * d, m2 = 1.4 / fyE * b * d;
+  const asMin = Math.max(m1, m2);
+  const beta1 = fc <= 28 ? 0.85 : Math.max(0.65, 0.85 - 0.05 * (fc - 28) / 7);
+  const a = As * fy / (0.85 * fc * b);
+  const c = a / beta1;
+  const epsT = 0.003 * (d - c) / c;
+  const epsY = fy / 200000;
+  const phiF = epsT >= epsY + 0.003 ? 0.90 : epsT <= epsY ? 0.65 : 0.65 + 0.25 * (epsT - epsY) / 0.003;
+  const Mn = As * fy * (d - a / 2) / 1e6;
+  const phiMn = phiF * Mn;
+  const flexAsOK = As >= asMin;
+  const flexOK = flexAsOK && phiMn >= Mu;
+
+  // Corte
+  const Vc = 0.17 * lam * sq(fc) * b * d / 1000;
+  const Av = ramas * PI * dst * dst / 4;
+  const Vs = Av * fyt * d / s / 1000;
+  const VsMax = 0.66 * sq(fc) * b * d / 1000;
+  const VsLim = 0.33 * sq(fc) * b * d / 1000;
+  const phiVn = 0.75 * (Vc + Vs);
+  const smax = Vs <= VsLim ? Math.min(d / 2, 400) : Math.min(d / 4, 200);
+  const avsMin = Math.max(0.062 * sq(fc) * b / fyt, 0.35 * b / fyt);
+  const shearReq = Vu > Vc;
+  const avsOK = !shearReq || Av / s >= avsMin;
+  const shearOK = phiVn >= Vu && Vs <= VsMax && s <= smax && avsOK;
+
+  // Detallado
+  const sLib = n > 1 ? (b - 2 * (r + dst) - n * db) / (n - 1) : NaN;
+  const sLibReq = Math.max(25, db, (4 / 3) * dagg);
+  const barsOK = n <= 1 || sLib >= sLibReq;
+
+  return {
+    d, As, asMin, m1, m2, beta1, a, c, epsT, epsY, phiF, Mn, phiMn, flexAsOK, flexOK,
+    Vc, Av, Vs, VsMax, VsLim, phiVn, smax, avsMin, shearReq, avsOK, shearOK,
+    sLib, sLibReq, barsOK, fyE, Mu, Vu, s, fc, fy, fyt, b, h, r, dst, db, n, lam, ramas, dagg
+  };
+}
+
+function pasos(R) {
+  const ok = x => x ? 'ok' : 'bad';
+  const txt = x => x ? 'Cumple' : 'No cumple';
+  return [
+    { sec: 'Flexión' , title: 'Altura útil', art: '', eq: 'd = h − r − dst − db/2',
+      sub: [`d = ${f(R.h,0)} − ${f(R.r,0)} − ${f(R.dst,0)} − ${f(R.db,0)}/2`], res: `d = ${f(R.d)} mm` },
+    { title: 'Armadura mínima a flexión', art: '9.6.1.2',
+      eq: 'As,mín = máx[ 0,25·√f’c/fy · bw·d ;  1,4/fy · bw·d ]',
+      sub: [`máx[ 0,25·√${f(R.fc,0)}/${f(R.fyE,0)} · ${f(R.b,0)}·${f(R.d)} ;  1,4/${f(R.fyE,0)} · ${f(R.b,0)}·${f(R.d)} ]`,
+            `    = máx[ ${f(R.m1)} ; ${f(R.m2)} ]`],
+      res: `As,mín = ${f(R.asMin)} mm²`,
+      note: R.fy > 500 ? 'fy se toma limitado a 500 MPa para esta expresión.' : '' },
+    { title: 'Armadura colocada', art: '',
+      eq: 'As = n · π·db²/4',
+      sub: [`As = ${R.n} · π·${f(R.db,0)}²/4`], res: `As = ${f(R.As)} mm²`,
+      ok: R.flexAsOK, okTxt: R.flexAsOK ? 'As ≥ As,mín' : 'As < As,mín' },
+    { title: 'Bloque de compresiones y eje neutro', art: '',
+      eq: 'a = As·fy / (0,85·f’c·bw)     c = a / β1',
+      sub: [`a = ${f(R.As)}·${f(R.fy,0)} / (0,85·${f(R.fc,0)}·${f(R.b,0)})`,
+            `β1 = ${f(R.beta1,2)}`],
+      res: `a = ${f(R.a)} mm  ·  c = ${f(R.c)} mm` },
+    { title: 'Deformación neta de tracción', art: '',
+      eq: 'εt = 0,003 · (d − c) / c',
+      sub: [`εt = 0,003 · (${f(R.d)} − ${f(R.c)}) / ${f(R.c)}`],
+      res: `εt = ${f(R.epsT, 4)}` },
+    { title: 'Factor de reducción φ (flexión)', art: '21.2.2',
+      eq: 'φ = 0,90 si εt ≥ εty + 0,003 ;  0,65 si εt ≤ εty ;  lineal entre ambos',
+      sub: [`εty = fy/Es = ${f(R.fy,0)}/200000 = ${f(R.epsY, 4)}`],
+      res: `φ = ${f(R.phiF, 3)}` },
+    { title: 'Momento de diseño', art: '',
+      eq: 'Mn = As·fy·(d − a/2)     φMn = φ · Mn',
+      sub: [`Mn = ${f(R.As)}·${f(R.fy,0)}·(${f(R.d)} − ${f(R.a/2)}) / 10⁶ = ${f(R.Mn)} kN·m`],
+      res: `φMn = ${f(R.phiMn)} kN·m   ≥   Mu = ${f(R.Mu)} kN·m`,
+      ok: R.phiMn >= R.Mu, okTxt: txt(R.phiMn >= R.Mu) },
+    { sec: 'Corte', title: 'Resistencia al corte del hormigón', art: '22.5.5.1',
+      eq: 'Vc = 0,17 · λ · √f’c · bw · d',
+      sub: [`Vc = 0,17 · ${f(R.lam,2)} · √${f(R.fc,0)} · ${f(R.b,0)} · ${f(R.d)} / 1000`],
+      res: `Vc = ${f(R.Vc)} kN` },
+    { title: 'Armadura transversal', art: '',
+      eq: 'Av = ramas · π·dst²/4     Vs = Av · fyt · d / s',
+      sub: [`Av = ${R.ramas} · π·${f(R.dst,0)}²/4 = ${f(R.Av)} mm²`,
+            `Vs = ${f(R.Av)} · ${f(R.fyt,0)} · ${f(R.d)} / ${f(R.s,0)} / 1000`],
+      res: `Vs = ${f(R.Vs)} kN` },
+    { title: 'Límite superior de Vs', art: '',
+      eq: 'Vs ≤ 0,66 · √f’c · bw · d',
+      sub: [`0,66 · √${f(R.fc,0)} · ${f(R.b,0)} · ${f(R.d)} / 1000 = ${f(R.VsMax)} kN`],
+      res: `Vs = ${f(R.Vs)} kN ${R.Vs <= R.VsMax ? '≤' : '>'} ${f(R.VsMax)} kN`,
+      ok: R.Vs <= R.VsMax, okTxt: txt(R.Vs <= R.VsMax) },
+    { title: 'Corte resistente de diseño', art: '',
+      eq: 'φVn = 0,75 · (Vc + Vs)',
+      sub: [`φVn = 0,75 · (${f(R.Vc)} + ${f(R.Vs)})`],
+      res: `φVn = ${f(R.phiVn)} kN   ≥   Vu = ${f(R.Vu)} kN`,
+      ok: R.phiVn >= R.Vu, okTxt: txt(R.phiVn >= R.Vu) },
+    { title: 'Armadura mínima de corte', art: '9.6.3',
+      eq: 'Av,mín/s = máx[ 0,062·√f’c·bw/fyt ;  0,35·bw/fyt ]',
+      sub: [`Av,mín/s = ${f(R.avsMin, 3)} mm²/mm`],
+      res: R.shearReq ? `Av/s = ${f(R.Av / R.s, 3)} mm²/mm` : 'No requerida: Vu ≤ Vc',
+      ok: R.shearReq ? R.avsOK : null, okTxt: R.shearReq ? txt(R.avsOK) : '' },
+    { title: 'Separación máxima de estribos', art: 'Tabla 9.7.6.2.2',
+      eq: 'Si Vs ≤ 0,33·√f’c·bw·d :  s ≤ mín(d/2 ; 400 mm)\nSi Vs > 0,33·√f’c·bw·d :  s ≤ mín(d/4 ; 200 mm)',
+      sub: [`0,33·√f’c·bw·d = ${f(R.VsLim)} kN  →  Vs = ${f(R.Vs)} kN`],
+      res: `s máx = ${f(R.smax, 0)} mm   ·   s = ${f(R.s, 0)} mm`,
+      ok: R.s <= R.smax, okTxt: txt(R.s <= R.smax) },
+    { sec: 'Detallado', title: 'Separación libre entre barras', art: '25.2',
+      eq: 's_lib = (bw − 2·(r + dst) − n·db) / (n − 1)\nrequisito: s_lib ≥ máx(25 mm ; db ; (4/3)·dagg)',
+      sub: R.n > 1 ? [`s_lib = (${f(R.b,0)} − 2·(${f(R.r,0)} + ${f(R.dst,0)}) − ${R.n}·${f(R.db,0)}) / ${R.n - 1}`] : [],
+      res: R.n > 1 ? `s_lib = ${f(R.sLib)} mm   ≥   ${f(R.sLibReq)} mm` : 'Una sola barra: no aplica',
+      ok: R.n > 1 ? R.barsOK : null, okTxt: R.n > 1 ? txt(R.barsOK) : '',
+      note: 'Art. 25.2.1: el mayor entre 25 mm, db y (4/3)·dagg.' },
+  ];
+}
+
+function renderMemoria(R) {
+  const seccion = [];
+  let html = '';
+  for (const p of pasos(R)) {
+    if (p.sec) html += `<div class="sec"><h2>${esc(p.sec)}</h2>`;
+    html += `<div class="step">
+      <div class="step-head"><h3>${esc(p.title)}</h3>
+        <span>${p.art ? `<span class="art">art. ${esc(p.art)}</span> ` : ''}${p.okTxt !== undefined && p.ok !== null && p.okTxt ? `<span class="pill ${p.ok ? 'ok' : 'bad'}">${esc(p.okTxt)}</span>` : ''}</span>
+      </div>
+      <div class="eq">${esc(p.eq)}</div>
+      ${(p.sub || []).map(l => `<p class="sub">${esc(l)}</p>`).join('')}
+      <p class="res">${esc(p.res)}</p>
+      ${p.note ? `<p class="note">${esc(p.note)}</p>` : ''}
+    </div>`;
+    if (p.sec) html += `</div>`;
+  }
+  return html;
+}
+
+function renderVeredictos(R) {
+  const v = (label, ok) => `<div class="verdict ${ok ? 'ok' : 'bad'}"><span>${label}</span><strong>${ok ? 'Cumple' : 'No cumple'}</strong></div>`;
+  $('veredictos').innerHTML = v('Flexión', R.flexOK) + v('Corte', R.shearOK) + v('Detallado', R.barsOK);
+}
+
+function actualizar() {
+  sincronizarCargas();
+  const v = leer();
+  if (!valido(v)) {
+    $('veredictos').innerHTML = '';
+    $('memoria').innerHTML = `<p class="msg">Completá todos los datos con valores positivos. n y ramas deben ser enteros, y r + dst + db/2 tiene que ser menor que h.</p>`;
+    return;
+  }
+  const R = calcular(v);
+  renderVeredictos(R);
+  $('memoria').innerHTML = renderMemoria(R);
+  dibujarSeccion(R);
+  dibujarDeformaciones(R);
+  renderUtilizacion(R);
+}
+
+function leerLista() {
+  try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; }
+}
+function guardarLista(lista) {
+  try { localStorage.setItem(KEY, JSON.stringify(lista)); } catch (e) { /* sin almacenamiento disponible */ }
+}
+
+function renderPlanilla() {
+  const lista = leerLista();
+  const filas = lista.map((it, i) => {
+    const R = calcular(it.datos);
+    const cumple = R.flexOK && R.shearOK && R.barsOK;
+    const fallos = [!R.flexOK && 'flexión', !R.shearOK && 'corte', !R.barsOK && 'detallado'].filter(Boolean).join(', ');
+    return `<tr>
+      <td>${esc(it.datos.nombre)}</td>
+      <td class="num">${f(R.b,0)}×${f(R.h,0)}</td>
+      <td class="num">${f(R.d)}</td>
+      <td class="num">${f(R.As)}</td>
+      <td class="num">${f(R.phiMn)}</td>
+      <td class="num">${f(R.Mu)}</td>
+      <td class="num">${f(R.phiVn)}</td>
+      <td class="num">${f(R.Vu)}</td>
+      <td><span class="pill ${cumple ? 'ok' : 'bad'}">${cumple ? 'Cumple' : 'Revisar: ' + esc(fallos)}</span></td>
+      <td><button class="btn ghost small" type="button" data-quitar="${i}">Quitar</button></td>
+    </tr>`;
+  }).join('');
+  $('filas').innerHTML = filas || `<tr><td colspan="10" class="note">Todavía no hay elementos. Usá “Agregar a la planilla” con los datos cargados.</td></tr>`;
+  $('contador').textContent = lista.length ? `${lista.length} elemento${lista.length > 1 ? 's' : ''} guardado${lista.length > 1 ? 's' : ''}` : '';
+}
+
+$('agregar').addEventListener('click', () => {
+  const v = leer();
+  if (!valido(v)) { actualizar(); return; }
+  const lista = leerLista();
+  lista.push({ datos: v });
+  guardarLista(lista);
+  renderPlanilla();
+});
+
+$('filas').addEventListener('click', e => {
+  const btn = e.target.closest('[data-quitar]');
+  if (!btn) return;
+  const lista = leerLista();
+  lista.splice(Number(btn.dataset.quitar), 1);
+  guardarLista(lista);
+  renderPlanilla();
+});
+
+$('vaciar').addEventListener('click', () => {
+  guardarLista([]);
+  renderPlanilla();
+});
+
+const etiq = (x, y, s, extra = '') =>
+  `<text x="${x}" y="${y}" ${extra} style="font:400 11px var(--mono);fill:var(--muted)">${esc(s)}</text>`;
+const linea = (x1, y1, x2, y2, st = 'stroke:var(--muted);stroke-width:1') =>
+  `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" style="${st}"/>`;
+const caja = (w, h, inner) =>
+  `<svg viewBox="0 0 ${w} ${h}" role="img" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+
+function dibujarSeccion(R) {
+  const W = 260, H = 300;
+  const k = Math.min((W - 90) / R.b, (H - 70) / R.h);
+  const bw = R.b * k, hh = R.h * k;
+  const x0 = (W - bw) / 2, y0 = 26;
+  const o = R.r + R.dst / 2;
+  const c0 = R.r + R.dst + R.db / 2;
+  const yb = y0 + hh - c0 * k;
+  const colorBarras = R.barsOK ? 'var(--accent)' : 'var(--bad)';
+  let barras = '';
+  for (let i = 0; i < R.n; i++) {
+    const xb = R.n === 1 ? x0 + bw / 2 : x0 + c0 * k + i * (bw - 2 * c0 * k) / (R.n - 1);
+    barras += `<circle cx="${xb}" cy="${yb}" r="${Math.max(2.5, R.db * k / 2)}" style="fill:${colorBarras}"/>`;
+  }
+  const inner = [
+    `<rect x="${x0}" y="${y0}" width="${bw}" height="${hh}" style="fill:var(--field);stroke:var(--ink);stroke-width:1.2"/>`,
+    `<rect x="${x0 + o * k}" y="${y0 + o * k}" width="${bw - 2 * o * k}" height="${hh - 2 * o * k}" rx="2" style="fill:none;stroke:var(--muted);stroke-width:${Math.max(1, R.dst * k)}"/>`,
+    barras,
+    linea(x0 - 12, y0, x0 - 12, y0 + hh), linea(x0 - 16, y0, x0 - 8, y0), linea(x0 - 16, y0 + hh, x0 - 8, y0 + hh),
+    etiq(x0 - 20, y0 + hh / 2 + 4, 'h', 'text-anchor="end"'),
+    linea(x0 + bw + 12, y0, x0 + bw + 12, yb), linea(x0 + bw + 8, y0, x0 + bw + 16, y0), linea(x0 + bw + 8, yb, x0 + bw + 16, yb),
+    etiq(x0 + bw + 18, (y0 + yb) / 2 + 4, 'd'),
+    linea(x0, y0 + hh + 12, x0 + bw, y0 + hh + 12), linea(x0, y0 + hh + 8, x0, y0 + hh + 16), linea(x0 + bw, y0 + hh + 8, x0 + bw, y0 + hh + 16),
+    etiq(x0 + bw / 2, y0 + hh + 26, 'b', 'text-anchor="middle"')
+  ].join('');
+  $('seccion').innerHTML = caja(W, H, inner);
+  $('seccionNota').textContent = `b = ${f(R.b, 0)} mm · h = ${f(R.h, 0)} mm · d = ${f(R.d)} mm · r = ${f(R.r, 0)} mm · estribos Ø${f(R.dst, 0)} c/${f(R.s, 0)} · ${R.n} Ø${f(R.db, 0)}`;
+}
+
+function dibujarDeformaciones(R) {
+  const W = 320, H = 300, y0 = 26;
+  const kk = 230 / R.h;
+  const { c, d, h, a } = R;
+  const eps = y => 0.003 * (c - y) / c;
+  const S = 58 / Math.max(0.003, Math.abs(eps(0)), Math.abs(eps(h)), Math.abs(eps(d)));
+  const Xc = 80;
+  const X = y => Xc + eps(y) * S;
+  const Y = y => y0 + y * kk;
+  const pts = [0, c, d, h].sort((p, q) => p - q).map(y => `${X(y).toFixed(1)},${Y(y).toFixed(1)}`).join(' ');
+  const xb = 200, wb = 100;
+  const inner = [
+    linea(Xc, y0, Xc, Y(h)),
+    linea(16, Y(c), 150, Y(c), 'stroke:var(--muted);stroke-dasharray:4 3'),
+    linea(16, Y(d), 150, Y(d), 'stroke:var(--accent);stroke-dasharray:4 3'),
+    `<polyline points="${pts}" style="fill:none;stroke:var(--accent);stroke-width:2"/>`,
+    `<circle cx="${X(0)}" cy="${Y(0)}" r="3" style="fill:var(--accent)"/>`,
+    `<circle cx="${X(d)}" cy="${Y(d)}" r="3" style="fill:var(--accent)"/>`,
+    etiq(Xc + 8, y0 + 12, 'εc = 0,003'),
+    etiq(16, Y(d) - 6, `εt = ${f(R.epsT, 4)}`),
+    etiq(154, Y(c) + 4, 'c'),
+    `<rect x="${xb}" y="${y0}" width="${wb}" height="${h * kk}" style="fill:none;stroke:var(--muted);stroke-dasharray:4 3"/>`,
+    `<rect x="${xb}" y="${y0}" width="${wb}" height="${a * kk}" style="fill:var(--accent);fill-opacity:.25;stroke:var(--accent)"/>`,
+    linea(xb, Y(d), xb + wb, Y(d), 'stroke:var(--accent);stroke-width:3'),
+    etiq(xb + wb / 2, y0 + a * kk / 2 + 4, 'C', 'text-anchor="middle"'),
+    etiq(xb + wb / 2, Y(d) + 16, 'T', 'text-anchor="middle"'),
+    etiq(xb + wb + 6, y0 + a * kk / 2 + 4, 'a')
+  ].join('');
+  $('deformaciones').innerHTML = caja(W, H, inner);
+  $('deformacionesNota').textContent = `c = ${f(c)} mm · a = ${f(a)} mm · C = 0,85·f’c·a·b = ${f(0.85 * R.fc * a * R.b / 1000)} kN · T = As·fy = ${f(R.As * R.fy / 1000)} kN · z = d − a/2 = ${f(d - a / 2)} mm`;
+}
+
+function renderUtilizacion(R) {
+  const fila = (nombre, ratio, detalle) => {
+    const ok = ratio <= 1;
+    return `<div>
+      <div class="ub-head"><span>${esc(nombre)}</span><span>${f(ratio * 100, 0)} %</span></div>
+      <div class="ub-track" role="img" aria-label="${esc(nombre)}: ${f(ratio * 100, 0)} por ciento"><div class="ub-fill ${ok ? 'ok' : 'bad'}" style="width:${Math.min(ratio, 1) * 100}%"></div></div>
+      <p class="ub-note">${esc(detalle)}</p>
+    </div>`;
+  };
+  const filas = [
+    fila('Flexión: Mu frente a φMn', R.Mu / R.phiMn, `Mu = ${f(R.Mu)} kN·m · φMn = ${f(R.phiMn)} kN·m`),
+    fila('Corte: Vu frente a φVn', R.Vu / R.phiVn, `Vu = ${f(R.Vu)} kN · φVn = ${f(R.phiVn)} kN`),
+    fila('Armadura mínima a flexión: As,mín frente a As', R.asMin / R.As, `As,mín = ${f(R.asMin)} mm² · As = ${f(R.As)} mm²`),
+    fila('Separación de estribos: s frente a s máx', R.s / R.smax, `s = ${f(R.s, 0)} mm · s máx = ${f(R.smax, 0)} mm`)
+  ];
+  if (R.n > 1) {
+    const ratio = R.sLib > 0 ? R.sLibReq / R.sLib : Infinity;
+    filas.push(fila('Separación libre entre barras: mínimo frente a s_lib', ratio, `s_lib = ${f(R.sLib)} mm · mínimo ${f(R.sLibReq)} mm`));
+  }
+  $('utilizacion').innerHTML = filas.join('');
+}
+
+const calcCargas = () => {
+  const g = id => parseFloat($(id).value);
+  const b = g('b'), h = g('h'), r = g('r'), dst = g('dst'), db = g('db');
+  const qD = g('qD'), qL = g('qL'), L = g('L'), gam = g('gam');
+  if (![b, h, r, dst, db, qD, qL, L, gam].every(Number.isFinite) || L <= 0 || qD < 0 || qL < 0 || gam <= 0) return null;
+  const pp = gam * (b / 1000) * (h / 1000);
+  const D = qD + pp;
+  const wu1 = 1.4 * D, wu2 = 1.2 * D + 1.6 * qL;
+  const wu = Math.max(wu1, wu2);
+  const dm = (h - r - dst - db / 2) / 1000;
+  const Mu = wu * L * L / 8;
+  const VuCara = wu * L / 2;
+  const usarD = $('usarD').checked && dm < L / 2;
+  const Vu = usarD ? wu * (L / 2 - dm) : VuCara;
+  return { pp, D, qD, qL, L, wu, wu1, wu2, dm, Mu, VuCara, Vu, usarD };
+};
+
+function sincronizarCargas() {
+  const on = $('desdeCargas').checked;
+  $('cargas').hidden = !on;
+  $('figDiag').hidden = !on;
+  $('Mu').readOnly = on;
+  $('Vu').readOnly = on;
+  if (!on) return;
+  const C = calcCargas();
+  if (!C) { $('wuNota').textContent = 'Completá las cargas y la luz con valores válidos.'; return; }
+  $('Mu').value = C.Mu.toFixed(2);
+  $('Vu').value = C.Vu.toFixed(2);
+  $('wuNota').textContent = `D = qD + pp = ${f(C.qD, 2)} + ${f(C.pp, 2)} = ${f(C.D, 2)} kN/m · wu = máx(1,4·D ; 1,2·D + 1,6·qL) = ${f(C.wu, 2)} kN/m`;
+  dibujarDiagramas(C);
+}
+
+function dibujarDiagramas(C) {
+  const W = 640, H = 275, x0 = 60, x1 = 600, L = C.L;
+  const MB = 115, VB = 215;
+  const X = x => x0 + (x / L) * (x1 - x0);
+  const ym = 85 / C.Mu, yv = 50 / C.VuCara;
+  const pm = [], pv = [];
+  for (let i = 0; i <= 80; i++) {
+    const x = L * i / 80;
+    pm.push(`${X(x).toFixed(1)},${(MB - C.wu * x * (L - x) / 2 * ym).toFixed(1)}`);
+    pv.push(`${X(x).toFixed(1)},${(VB - C.wu * (L / 2 - x) * yv).toFixed(1)}`);
+  }
+  const inner = [
+    `<polygon points="${X(0)},${MB} ${pm.join(' ')} ${X(L)},${MB}" style="fill:var(--accent);fill-opacity:.15"/>`,
+    linea(x0, MB, x1, MB),
+    `<polyline points="${pm.join(' ')}" style="fill:none;stroke:var(--accent);stroke-width:2"/>`,
+    linea(x0, VB, x1, VB),
+    `<polyline points="${pv.join(' ')}" style="fill:none;stroke:var(--ink);stroke-width:2"/>`,
+    etiq(x0, 14, 'Momento (kN·m)'),
+    etiq(x0, 150, 'Corte (kN)'),
+    etiq(X(L / 2), MB - 85 - 6, `Mu = ${f(C.Mu, 2)}`, 'text-anchor="middle"'),
+    etiq(x1, 176, `Vu = ${f(C.Vu, 2)} kN ${C.usarD ? 'a d de la cara' : 'en la cara del apoyo'}`, 'text-anchor="end"'),
+    `<circle cx="${X(0)}" cy="${MB}" r="3" style="fill:var(--ink)"/>`,
+    `<circle cx="${X(L)}" cy="${MB}" r="3" style="fill:var(--ink)"/>`
+  ].join('');
+  $('diagramas').innerHTML = caja(W, H, inner);
+  $('diagNota').textContent = `L = ${f(C.L, 2)} m · wu = ${f(C.wu, 2)} kN/m · Mu = wu·L²/8 = ${f(C.Mu, 2)} kN·m · Vu = wu·L/2 = ${f(C.VuCara, 2)} kN en la cara` + (C.usarD ? ` · ${f(C.Vu, 2)} kN a d de la cara` : '');
+}
+
+['qD', 'qL', 'L', 'gam'].forEach(k => $(k).addEventListener('input', actualizar));
+['desdeCargas', 'usarD'].forEach(k => $(k).addEventListener('change', actualizar));
+FIELDS.concat(['nombre']).forEach(k => $(k).addEventListener('input', actualizar));
+
+actualizar();
+renderPlanilla();
+</script>
+</body>
+</html>
